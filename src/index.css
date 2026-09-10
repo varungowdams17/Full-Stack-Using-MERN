@@ -1,0 +1,36 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --page-bg: #eef4f8;
+    --text: #20304b;
+    --muted: #64748b;
+    --panel: #ffffff;
+    --line: #dbe7f0;
+    --purple: #563c8c;
+    --purple-dark: #2b2150;
+    --pink: #d65c8b;
+    --mint: #90dcb5;
+    --shadow: rgba(33, 45, 68, 0.14);
+}
+
+body {
+    margin: 0;
+    font-family: "Inter", "Poppins", "Segoe UI", Arial, sans-serif;
+    background:
+        radial-gradient(circle at 70% 10%, rgba(207, 185, 255, 0.45), transparent 20%),
+        radial-gradient(circle at 20% 80%, rgba(148, 221, 204, 0.25), transparent 24%),
+        var(--page-bg);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+#root {
+    min-height: 100vh;
+}
