@@ -1,8 +1,9 @@
-function Welcome() {
+function Welcome () {
     return (
         <section className="welcome">
-            <h1>Welcome Back Students</h1>
+             <h1>Welcome Back Students</h1>
         </section>
+       
     );
 }
 
