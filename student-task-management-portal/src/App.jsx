@@ -2,11 +2,17 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Navbar from "./components/Navbar";
+<<<<<<< HEAD
 import Welcome from "./components/Welcome";
 import Dashboard from "./components/Dashboard";
 import AddTaskPage from "./components/AddTaskPage";
 import TaskDetails from "./components/Taskdetails";
 import TasksPage from "./tasks";
+=======
+import Welcome from "./components/welcome";
+import Dashboard from "./components/Dashborad";
+
+>>>>>>> eef871f (Add student task management portal)
 function App() {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);

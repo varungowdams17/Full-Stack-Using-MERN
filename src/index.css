@@ -3,27 +3,34 @@
 }
 
 :root {
-    --page-bg: #eef4f8;
-    --text: #20304b;
-    --muted: #64748b;
-    --panel: #ffffff;
-    --line: #dbe7f0;
-    --purple: #563c8c;
-    --purple-dark: #2b2150;
-    --pink: #d65c8b;
-    --mint: #90dcb5;
-    --shadow: rgba(33, 45, 68, 0.14);
+    --page-bg: #f5f2ec;
+    --text: #182a3a;
+    --muted: #6d7882;
+    --panel: #fffdf9;
+    --line: #e7dfd3;
+    --ink: #18354a;
+    --ink-soft: #28516a;
+    --coral: #e86f51;
+    --coral-dark: #c9523a;
+    --mint: #9fd3bd;
+    --gold: #f2c66d;
+    --shadow: rgba(24, 42, 58, 0.12);
 }
 
 body {
     margin: 0;
-    font-family: "Inter", "Poppins", "Segoe UI", Arial, sans-serif;
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
     background:
-        radial-gradient(circle at 70% 10%, rgba(207, 185, 255, 0.45), transparent 20%),
-        radial-gradient(circle at 20% 80%, rgba(148, 221, 204, 0.25), transparent 24%),
+        radial-gradient(circle at 90% 0%, rgba(242, 198, 109, 0.24), transparent 24%),
+        radial-gradient(circle at 0% 70%, rgba(159, 211, 189, 0.22), transparent 26%),
         var(--page-bg);
     color: var(--text);
     min-height: 100vh;
+}
+
+button,
+input {
+    font: inherit;
 }
 
 a {
