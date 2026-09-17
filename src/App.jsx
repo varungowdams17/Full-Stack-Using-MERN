@@ -7,6 +7,18 @@ import Dashboard from "./components/Dashboard";
 import AddTaskPage from "./components/AddTaskPage";
 import TaskDetails from "./components/Taskdetails";
 import TasksPage from "./tasks";
+
+const normalizeTask = (task) => {
+    const rawId = task?.id ?? task?._id ?? "";
+    return {
+        ...task,
+        id: String(rawId),
+        status: String(task?.status || "pending").trim().toLowerCase(),
+    };
+};
+
+const normalizeTasks = (items = []) => items.map(normalizeTask);
+
 function App() {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -19,7 +31,8 @@ function App() {
                 if (!response.ok) {
                     throw new Error("Unable to load tasks.");
                 }
-                setTasks(await response.json());
+                const rows = await response.json();
+                setTasks(normalizeTasks(rows));
             } catch (requestError) {
                 setError(requestError.message);
             } finally {
@@ -36,7 +49,7 @@ function App() {
             setError("Unable to update the task.");
             return;
         }
-        const updatedTask = await response.json();
+        const updatedTask = normalizeTask(await response.json());
         setTasks((currentTasks) => currentTasks.map((task) => task.id === id ? updatedTask : task));
     }
 
@@ -50,7 +63,7 @@ function App() {
             setError("Unable to add the task.");
             return;
         }
-        const createdTask = await response.json();
+        const createdTask = normalizeTask(await response.json());
         setTasks((currentTasks) => [...currentTasks, createdTask]);
     }
 

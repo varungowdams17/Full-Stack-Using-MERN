@@ -1,114 +1,132 @@
-import cors from "cors";
-import express from "express";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+require("dotenv").config();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dataDirectory = path.join(__dirname, "data");
-const dataFile = path.join(dataDirectory, "tasks.json");
-const port = process.env.PORT || 5000;
+const express = require("express");
+const cors = require("cors");
+const dns = require("dns");
+const mongoose = require("mongoose");
+const Task = require("./models/Task");
 
-const seedTasks = [
-    { id: 1, title: "Learn React", description: "To be finished in 5 days", status: "pending" },
-    { id: 2, title: "Learn MERN", description: "To be finished in 9 days", status: "pending" },
-    { id: 3, title: "Learn MongoDB", description: "To be finished in 3 days", status: "pending" },
-];
-
-function ensureDataFile() {
-    fs.mkdirSync(dataDirectory, { recursive: true });
-    if (!fs.existsSync(dataFile)) {        fs.writeFileSync(dataFile, JSON.stringify(seedTasks, null, 2));
-    }
-}
-
-function readTasks() {
-    ensureDataFile();
-    return JSON.parse(fs.readFileSync(dataFile, "utf8"));
-}
-
-function writeTasks(tasks) {
-    fs.writeFileSync(dataFile, JSON.stringify(tasks, null, 2));
-}
+dns.setServers(["8.8.8.8"]);
 
 const app = express();
+
+const normalizeStatus = (status) => {
+    const value = String(status ?? "Pending").trim().toLowerCase();
+    return value === "completed" ? "Completed" : "Pending";
+};
+
 app.use(cors());
 app.use(express.json());
 
-app.get("/api/health", (_request, response) => {
-    response.json({ status: "ok" });
+app.get("/", (req, res) => {
+    res.send("Back-end server is running");
 });
 
-app.get("/api/tasks", (_request, response) => {
-    response.json(readTasks());
-});
+mongoose
+    .connect(process.env.MONGODB_URI)
+    .then(async () => {
+        console.log("Connected to MongoDB Atlas");
 
-app.get("/api/tasks/:id", (request, response) => {
-    const taskId = Number(request.params.id);
-    const task = readTasks().find((item) => item.id === taskId);
+        try {
+            await Task.collection.dropIndex("id_1").catch(() => {});
+            await Task.collection.updateMany({ id: { $exists: true } }, { $unset: { id: "" } });
+            console.log("Task collection cleaned up for MongoDB Atlas");
+        } catch (error) {
+            console.error("Task collection cleanup warning:", error.message);
+        }
+    })
+    .catch((error) => {
+        console.error("Error connecting to MongoDB Atlas:", error.message);
+    });
 
-    if (!task) {
-        return response.status(404).json({ message: "Task not found." });
+app.get("/api/tasks", async (req, res) => {
+    try {
+        const tasks = await Task.find();
+        res.json(tasks);
+    } catch (error) {
+        console.error("Error reading tasks:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
-
-    return response.json(task);
 });
 
-app.post("/api/tasks", (request, response) => {
-    const title = request.body?.title?.trim();
-    const description = request.body?.description?.trim();
-
-    if (!title || !description) {
-        return response.status(400).json({ message: "Title and description are required." });
+app.get("/api/tasks/:id", async (req, res) => {
+    try {
+        const task = await Task.findById(req.params.id);
+        if (!task) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+        res.json(task);
+    } catch (error) {
+        console.error("Error reading task:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
-
-    const tasks = readTasks();
-    const task = {
-        id: tasks.length ? Math.max(...tasks.map((item) => item.id)) + 1 : 1,
-        title,
-        description,
-        status: "pending",
-    };
-
-    tasks.push(task);
-    writeTasks(tasks);
-    return response.status(201).json(task);
 });
 
-app.patch("/api/tasks/:id", (request, response) => {
-    const taskId = Number(request.params.id);
-    const tasks = readTasks();
-    const task = tasks.find((item) => item.id === taskId);
-
-    if (!task) {
-        return response.status(404).json({ message: "Task not found." });
+app.post("/api/tasks", async (req, res) => {
+    try {
+        const newTask = await Task.create({
+            ...req.body,
+            status: normalizeStatus(req.body?.status),
+        });
+        res.status(201).json(newTask);
+    } catch (error) {
+        console.error("Error creating task:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
+});
 
-    if (request.body?.status && !["pending", "completed"].includes(request.body.status)) {
-        return response.status(400).json({ message: "Status must be pending or completed." });
+app.patch("/api/tasks/:id", async (req, res) => {
+    try {
+        const task = await Task.findById(req.params.id);
+        if (!task) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const currentStatus = String(task.status ?? "Pending").trim().toLowerCase();
+        const nextStatus = normalizeStatus(
+            req.body?.status ?? (currentStatus === "completed" ? "Pending" : "Completed")
+        );
+
+        task.status = nextStatus;
+        await task.save();
+        res.json(task);
+    } catch (error) {
+        console.error("Error updating task:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
-
-    task.status = request.body?.status || (task.status === "pending" ? "completed" : "pending");
-    writeTasks(tasks);
-    return response.json(task);
 });
 
-app.delete("/api/tasks/:id", (request, response) => {
-    const taskId = Number(request.params.id);
-    const tasks = readTasks();
-    const remainingTasks = tasks.filter((item) => item.id !== taskId);
+app.put("/api/tasks/:id", async (req, res) => {
+    try {
+        const payload = {
+            ...req.body,
+            status: normalizeStatus(req.body?.status),
+        };
 
-    if (remainingTasks.length === tasks.length) {
-        return response.status(404).json({ message: "Task not found." });
+        const task = await Task.findByIdAndUpdate(req.params.id, payload, { new: true });
+        if (!task) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+        res.json(task);
+    } catch (error) {
+        console.error("Error updating task:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
-
-    writeTasks(remainingTasks);
-    return response.status(204).send();
 });
 
-app.use((_request, response) => {
-    response.status(404).json({ message: "Route not found." });
+app.delete("/api/tasks/:id", async (req, res) => {
+    try {
+        const task = await Task.findByIdAndDelete(req.params.id);
+        if (!task) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+        res.json(task);
+    } catch (error) {
+        console.error("Error deleting task:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
 });
 
-app.listen(port, () => {
-    console.log(`Task API listening on http://localhost:${port}`);
+app.listen(5050, () => {
+    console.log("Server is running on port 5050");
 });
