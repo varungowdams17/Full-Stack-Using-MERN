@@ -2,14 +2,42 @@
     box-sizing: border-box;
 }
 
+:root {
+    --page-bg: #f5f2ec;
+    --text: #182a3a;
+    --muted: #6d7882;
+    --panel: #fffdf9;
+    --line: #e7dfd3;
+    --ink: #18354a;
+    --ink-soft: #28516a;
+    --coral: #e86f51;
+    --coral-dark: #c9523a;
+    --mint: #9fd3bd;
+    --gold: #f2c66d;
+    --shadow: rgba(24, 42, 58, 0.12);
+}
+
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    color: #222;
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    background:
+        radial-gradient(circle at 90% 0%, rgba(242, 198, 109, 0.24), transparent 24%),
+        radial-gradient(circle at 0% 70%, rgba(159, 211, 189, 0.22), transparent 26%),
+        var(--page-bg);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+button,
+input {
+    font: inherit;
 }
 
 a {
     color: inherit;
     text-decoration: none;
+}
+
+#root {
+    min-height: 100vh;
 }
